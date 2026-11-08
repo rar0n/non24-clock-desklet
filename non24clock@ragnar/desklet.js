@@ -51,7 +51,6 @@ const PLANET_DAY_SECONDS = {
 // settings-schema key -> property name on the desklet (read-only for us)
 const SETTING_KEYS = {
     "mode": "mode",
-    "planet": "planet",
     "show-seconds": "showSeconds",
     "show-day": "showDay",
     "show-real": "showReal",
@@ -146,6 +145,20 @@ function parseDayLength(str) {
     if (!(hours >= MIN_DAY_HOURS && hours <= MAX_DAY_HOURS))
         return null;
     return hours;
+}
+
+// Seconds -> day length text "h:mm:ss[.fff]" (to the millisecond, no trailing zeros), the
+// form the day-length field accepts: 88775.244 -> "24:39:35.244", 86400 -> "24:00:00".
+function secondsToDayLengthText(seconds) {
+    let ms = Math.round(seconds * 1000);
+    let h = Math.floor(ms / 3600000);
+    let m = Math.floor(ms / 60000) % 60;
+    let s = Math.floor(ms / 1000) % 60;
+    let frac = ms % 1000;
+    let text = h + ":" + pad(m) + ":" + pad(s);
+    if (frac)
+        text += "." + padTo(frac, 3).replace(/0+$/, "");
+    return text;
 }
 
 // A time set via 0..24 scaling and shown back can land a few 1e-11 s below the second it
@@ -270,10 +283,17 @@ Non24Desklet.prototype = {
             this.settings.bindProperty(Settings.BindingDirection.BIDIRECTIONAL,
                 key, ANCHOR_KEYS[key], null, null);
         }
-        // The day length is applied after a pause in typing, not on every keystroke.
-        this.settings.bindProperty(Settings.BindingDirection.IN,
-            "day-length", "dayLength", () => this._scheduleLengthApply(), null);
+        // The day-length field is the single source of the day length. Picking a planet fills
+        // it in; editing it sets the planet preset back to "custom". Both are bidirectional
+        // because the desklet writes them too.
+        this.settings.bindProperty(Settings.BindingDirection.BIDIRECTIONAL,
+            "day-length", "dayLength", () => this._onDayLengthChanged(), null);
+        this.settings.bindProperty(Settings.BindingDirection.BIDIRECTIONAL,
+            "planet", "planet", () => this._onPlanetChanged(), null);
         this._appliedPeriod = parseDayLength(this.dayLength);
+        // Settings saved with a planet chosen: make the field match it.
+        if (PLANET_DAY_SECONDS[this.planet])
+            this._applyPlanet();
         this._initAnchor();
 
         this._buildUi();
@@ -287,17 +307,43 @@ Non24Desklet.prototype = {
 
     // ---- clock model (mirrors ClockMath in the Android app) -------------------------
 
-    // Configured day length in real hours: the chosen planet's day, or for "Custom" the last
-    // valid typed value; if the saved text is unreadable at startup, the length the anchor
-    // was made under, else 24.
+    // Configured day length in real hours: the last valid value of the day-length field; if
+    // the saved text is unreadable at startup, the length the anchor was made under, else 24.
     _periodHours: function() {
-        let planetSeconds = PLANET_DAY_SECONDS[this.planet];
-        if (planetSeconds)
-            return planetSeconds / 3600;
         return this._appliedPeriod || this.anchorPeriod || 24;
     },
 
-    // Called on every edit of the day-length field; applies the text once typing pauses.
+    // A planet is chosen: write its day length into the field and use it right away.
+    _applyPlanet: function() {
+        let seconds = PLANET_DAY_SECONDS[this.planet];
+        if (!seconds)
+            return;
+        if (this._lengthTimeoutId) {
+            Mainloop.source_remove(this._lengthTimeoutId);
+            this._lengthTimeoutId = 0;
+        }
+        this.dayLength = secondsToDayLengthText(seconds);
+        this._appliedPeriod = seconds / 3600;
+    },
+
+    _onPlanetChanged: function() {
+        this._applyPlanet();
+        this._restyleAndRefresh(true);
+    },
+
+    // The day-length field changed: by the user, or by _applyPlanet() writing a planet's value.
+    _onDayLengthChanged: function() {
+        let seconds = PLANET_DAY_SECONDS[this.planet];
+        if (seconds) {
+            let typed = parseDayLength(this.dayLength);
+            if (typed !== null && Math.abs(typed - seconds / 3600) < 1e-9)
+                return; // that is the planet's own value, nothing was edited
+            this.planet = "custom"; // edited by hand: no planet matches any more
+        }
+        this._scheduleLengthApply();
+    },
+
+    // Applies the typed day length once typing pauses.
     _scheduleLengthApply: function() {
         if (this._lengthTimeoutId)
             Mainloop.source_remove(this._lengthTimeoutId);

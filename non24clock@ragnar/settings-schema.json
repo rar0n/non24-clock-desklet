@@ -16,10 +16,10 @@
     "planet": {
         "type": "combobox",
         "default": "custom",
-        "description": "Day length preset",
-        "tooltip": "Use the length of a day (sunrise to sunrise) on a planet of the solar system, or Custom to use the day length typed below. Calculated from IAU/JPL rotation and orbital periods; Mars is the official sol. The gas giants have no solid surface, so their figures depend on how rotation is measured (see the README); use Custom for other values.",
+        "description": "Day length of a planet",
+        "tooltip": "Fills in the day length below with the length of a day (sunrise to sunrise) on that planet. Editing the day length by hand sets this back to Custom. Calculated from IAU/JPL rotation and orbital periods; Mars is the official sol. The gas giants have no solid surface, so their figures depend on how rotation is measured (see the README).",
         "options": {
-            "Custom (use the day length below)": "custom",
+            "Custom (typed value)": "custom",
             "Mercury (4222:32:09.4)": "mercury",
             "Venus (2802:00:40.9)": "venus",
             "Earth (24:00:00)": "earth",
@@ -33,8 +33,8 @@
     "day-length": {
         "type": "entry",
         "default": "26",
-        "description": "Custom day length (hours, h:mm or h:mm:ss)",
-        "tooltip": "Used when the preset above is Custom. Real time in one Non-24 day, at least 1 hour. Decimal hours (24.5), hours:minutes (24:30, or 24:30.5 for fractional minutes), or hours:minutes:seconds (24:39:35.244 for fractional seconds). A comma works as the decimal separator. Applied when you stop typing; the clock keeps its current position in the day."
+        "description": "Day length (hours, h:mm or h:mm:ss)",
+        "tooltip": "Real time in one Non-24 day, at least 1 hour. Choosing a planet above fills this in. Decimal hours (24.5), hours:minutes (24:30, or 24:30.5 for fractional minutes), or hours:minutes:seconds (24:39:35.244 for fractional seconds). A comma works as the decimal separator. Applied when you stop typing; the clock keeps its current position in the day."
     },
     "show-seconds": {
         "type": "switch",

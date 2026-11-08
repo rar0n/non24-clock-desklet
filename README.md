@@ -36,7 +36,7 @@ The gas giants have no solid surface, so their "rotation" is defined by somethin
 - **Neptune**: the current IAU value (2015) is from tracking cloud features. NASA's fact sheet still uses the older Voyager radio rotation of 16:06:36, which gives a solar day of 16:06:36.6.
 - **Jupiter**: some IAU reports have used a rounded rate of 870.536 deg/day (9:55:30.0); System III (1965) is the defined radio period, which is what is used here.
 
-If you prefer other values, pick *Custom* and type them, e.g. `16:06:36.6` for Neptune.
+Choosing a planet fills in the day length field, which is the only thing the clock uses; editing the field afterwards sets the planet list back to *Custom*. So to use other values, just type them, e.g. `16:06:36.6` for Neptune.
 
 Sources: [JPL Planetary Physical Parameters](https://ssd.jpl.nasa.gov/planets/phys_par.html), the [IAU WGCCRE report 2015](https://doi.org/10.1007/s10569-017-9805-5) (rotation rates), the [NASA/PDS Atmospheres longitude systems page](https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/longitude.htm) (Jupiter System III), and NASA's [Planetary Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/) for comparison.
 
