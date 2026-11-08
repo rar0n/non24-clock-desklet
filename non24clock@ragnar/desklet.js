@@ -9,8 +9,10 @@
 //    Wrap-around shows pos24/24*period: normal-length hours that wrap at the day
 //    length, so it can show values above 24 (e.g. 24:17 on a 24h30m day).
 //
-// Switching mode never moves Non-24 midnight. Changing the day length keeps the current
-// position in the day (the clock re-anchors at "now"). Setting a time re-anchors at "now".
+// Switching mode never moves Non-24 midnight. Changing the day length does not make the
+// reading jump: wrap-around keeps the hours since midnight (wrapping, and advancing the day,
+// only if they no longer fit), Mars-style keeps the fraction of the day (see _syncPeriod).
+// Setting a time re-anchors at "now".
 
 const Desklet = imports.ui.desklet;
 const St = imports.gi.St;
@@ -428,11 +430,28 @@ Non24Desklet.prototype = {
         return this.anchorPos24 + (nowMs - this.anchorMs) / HOUR_MS * (24 / period);
     },
 
-    // If the configured day length differs from the anchor's, re-anchor at `nowMs` without
-    // moving the current position in the day (ClockMath.withPeriod).
+    _samePeriod: function(a, b) {
+        return Math.abs(a - b) < 1e-9;
+    },
+
+    // Changing the day length must not make the clock reading jump:
+    //  - Wrap-around shows the hours since the last Non-24 midnight, so those stay as they
+    //    are and only the point where the day wraps moves: with a longer day nothing changes,
+    //    with a shorter one the reading wraps (and the day number advances) if the elapsed
+    //    time no longer fits. The anchor is not touched, so changing the length back
+    //    restores the old reading; _compute reads the anchor against the current length.
+    //  - Mars-style shows the fraction of the day, so that fraction stays (the anchor is
+    //    re-anchored at `nowMs` at the same position in the day, ClockMath.withPeriod).
+    // Called before the anchor is used. A wrap -> Mars-style switch first folds a pending
+    // wrap-around length change into the anchor, so the midnight does not move.
     _syncPeriod: function(nowMs) {
         let period = this._periodHours();
-        if (Math.abs(period - this.anchorPeriod) < 1e-9)
+        let modeChanged = this._lastMode !== undefined && this._lastMode !== this.mode;
+        if (modeChanged && this._lastMode === "wrap" && !this._samePeriod(period, this.anchorPeriod))
+            this._reanchorWrap(nowMs, period);
+        this._lastMode = this.mode;
+
+        if (this.mode === "wrap" || this._samePeriod(period, this.anchorPeriod))
             return;
         let u = this._unwrapped(nowMs, this.anchorPeriod);
         let day = this.anchorDay + Math.floor(u / 24);
@@ -442,18 +461,52 @@ Non24Desklet.prototype = {
         this.anchorPeriod = period;
     },
 
+    // Hours since the last Non-24 midnight at `nowMs`, in real hours, as wrap-around sees it
+    // under day length `period`, and the days passed since the anchor's day began.
+    // -> { shown, days }
+    _wrapReading: function(nowMs, period) {
+        let elapsed = this.anchorPos24 / 24 * this.anchorPeriod + (nowMs - this.anchorMs) / HOUR_MS;
+        let days = Math.floor(elapsed / period);
+        return { shown: elapsed - days * period, days: days };
+    },
+
+    // Re-anchor at `nowMs` under `period`, keeping the wrap-around reading and day number.
+    _reanchorWrap: function(nowMs, period) {
+        let r = this._wrapReading(nowMs, period);
+        this.anchorPos24 = r.shown / period * 24;
+        this.anchorDay = this.anchorDay + r.days;
+        this.anchorMs = nowMs;
+        this.anchorPeriod = period;
+    },
+
+    // Bring the anchor fully in line with the configured day length for the current mode, for
+    // actions that re-anchor (set time, align seconds).
+    _normalizeAnchor: function(nowMs) {
+        this._syncPeriod(nowMs);
+        let period = this._periodHours();
+        if (this.mode === "wrap" && !this._samePeriod(period, this.anchorPeriod))
+            this._reanchorWrap(nowMs, period);
+    },
+
     // -> { text, day }
     _compute: function(nowMs) {
         this._syncPeriod(nowMs);
-        let period = this.anchorPeriod;
-        let u = this._unwrapped(nowMs, period);
-        let pos24 = wrap24(u);
-        let shownLength = this.mode === "wrap" ? period : 24;
-        let hours = pos24 / 24 * shownLength;
+        let hours, day, shownLength;
+        if (this.mode === "wrap") {
+            shownLength = this._periodHours();
+            let r = this._wrapReading(nowMs, shownLength);
+            hours = r.shown;
+            day = this.anchorDay + r.days;
+        } else {
+            shownLength = 24;
+            let u = this._unwrapped(nowMs, this.anchorPeriod);
+            hours = wrap24(u);
+            day = this.anchorDay + Math.floor(u / 24);
+        }
         let digits = hourDigitsFor(shownLength);
         return {
             text: this.showSeconds ? formatHms(hours, digits) : formatHm(hours, digits),
-            day: this.anchorDay + Math.floor(u / 24)
+            day: day
         };
     },
 
@@ -622,7 +675,7 @@ Non24Desklet.prototype = {
     // and withPos24): re-anchor at "now", keeping the current day number. Returns false after
     // notifying, with nothing changed, if the time does not fit; `subject` names it there.
     _setShownHours: function(nowMs, hours, subject) {
-        this._syncPeriod(nowMs);
+        this._normalizeAnchor(nowMs);
         let period = this.anchorPeriod;
         let shownLength = this.mode === "wrap" ? period : 24;
         if (hours >= shownLength) {
@@ -643,7 +696,7 @@ Non24Desklet.prototype = {
     // otherwise the nearest match, at most +-30 s. Keeps the day number.
     _alignSeconds: function(nowMs, forwardOnly) {
         const MINUTE_MS = 60000;
-        this._syncPeriod(nowMs);
+        this._normalizeAnchor(nowMs);
         let period = this.anchorPeriod;
         let u = this._unwrapped(nowMs, period);
         let day = this.anchorDay + Math.floor(u / 24);

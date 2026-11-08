@@ -43,12 +43,12 @@
     },
     "show-day": {
         "type": "switch",
-        "default": true,
+        "default": false,
         "description": "Show day number"
     },
     "show-real": {
         "type": "switch",
-        "default": false,
+        "default": true,
         "description": "Show Earth time (local clock with UTC offset)"
     },
 

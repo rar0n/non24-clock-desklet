@@ -9,6 +9,7 @@ A digital clock desklet for Cinnamon (Linux Mint) that runs on a day length of y
 - Two display modes:
   - **Mars-style**: the day is always shown as 0-24, so the hours are stretched or compressed
   - **Wrap-around**: normal-length hours that wrap at your day length, so the display can go above 24 (e.g. 24:17 on a 24 h 30 min day)
+- Changing the day length never makes the reading jump: wrap-around keeps the hours since Non-24 midnight (it only wraps, and advances the day number, if they no longer fit, and changing back restores the old reading), Mars-style keeps the fraction of the day
 - Set the current Non-24 time by typing it in, or with one button set it to the current local time (wrap-around mode needs a day length longer than the local time); switching mode never moves Non-24 midnight
 - Optional day counter and a second line with the local Earth time
 - DSEG7 / DSEG14 segment fonts (or any installed font), with unlit segments, colors, size and digit-shape options
