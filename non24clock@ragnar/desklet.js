@@ -276,6 +276,7 @@ Non24Desklet.prototype = {
         this._pendingSync = null;
         // Cinnamon invokes the settings button's callback by name; make sure `this` is right.
         this.on_set_time_pressed = this.on_set_time_pressed.bind(this);
+        this.on_set_local_time_pressed = this.on_set_local_time_pressed.bind(this);
         this.on_align_seconds_pressed = this.on_align_seconds_pressed.bind(this);
 
         this.settings = new Settings.DeskletSettings(this, metadata["uuid"], desklet_id);
@@ -591,28 +592,50 @@ Non24Desklet.prototype = {
         }
 
         let now = Date.now();
-        this._syncPeriod(now);
-        let period = this.anchorPeriod;
-        let shownLength = this.mode === "wrap" ? period : 24;
-        let hours = p / 3600;
-        if (hours >= shownLength) {
-            Main.notify("Non-24 Clock", this.mode === "wrap"
-                ? "That time is not shorter than the day length."
-                : "Mars-style time must be below 24:00:00.");
+        if (!this._setShownHours(now, p / 3600, "That time"))
             return;
-        }
-
-        // Re-anchor at "now" (ClockMath.withPos24); keep the current day number.
-        let day = this.anchorDay + Math.floor(this._unwrapped(now, period) / 24);
-        this.anchorPos24 = wrap24(hours / shownLength * 24);
-        this.anchorDay = day;
-        this.anchorMs = now;
 
         // Wrap-around, HH:MM entered: HH:MM:00 becomes HH:MM:<real seconds> (shift 0..<60 s forward).
         let hasSeconds = /^\s*\d+:\d{1,2}:\d{1,2}\s*$/.test(this.setTimeText);
         if (this.mode === "wrap" && this.syncSeconds && !hasSeconds)
             this._alignSeconds(now, true);
         this._refresh();
+    },
+
+    // Called by the "Set clock to current local time" button: the clock reads the local
+    // time of day (like the Earth clock), as far as that fits. In wrap-around mode that needs
+    // the day length to be longer than the local time; Mars-style (0-24) always fits.
+    // The seconds already agree with the Earth clock, so no seconds alignment is needed.
+    on_set_local_time_pressed: function() {
+        let now = Date.now();
+        let d = new Date(now);
+        let hours = d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600 +
+            d.getMilliseconds() / HOUR_MS;
+        if (!this._setShownHours(now, hours, "The current local time (" + pad(d.getHours()) + ":" +
+                pad(d.getMinutes()) + ")"))
+            return;
+        this._refresh();
+    },
+
+    // Make the clock read `hours` (in the units of the current display mode: normal hours up
+    // to the day length in wrap-around, 0-24 in Mars-style) as of `nowMs` (ClockMath.fromShown
+    // and withPos24): re-anchor at "now", keeping the current day number. Returns false after
+    // notifying, with nothing changed, if the time does not fit; `subject` names it there.
+    _setShownHours: function(nowMs, hours, subject) {
+        this._syncPeriod(nowMs);
+        let period = this.anchorPeriod;
+        let shownLength = this.mode === "wrap" ? period : 24;
+        if (hours >= shownLength) {
+            Main.notify("Non-24 Clock", this.mode === "wrap"
+                ? subject + " is not shorter than the day length."
+                : "Mars-style time must be below 24:00:00.");
+            return false;
+        }
+        let day = this.anchorDay + Math.floor(this._unwrapped(nowMs, period) / 24);
+        this.anchorPos24 = wrap24(hours / shownLength * 24);
+        this.anchorDay = day;
+        this.anchorMs = nowMs;
+        return true;
     },
 
     // Re-anchor at `nowMs` so that, in wrap-around hours, the shown seconds equal the real

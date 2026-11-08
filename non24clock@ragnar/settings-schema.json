@@ -56,6 +56,12 @@
         "type": "header",
         "description": "Set the current Non-24 time"
     },
+    "set-local-button": {
+        "type": "button",
+        "description": "Set clock to current local time",
+        "tooltip": "Makes the clock read the same time as the Earth clock. In wrap-around mode this only works while the day length is longer than the local time.",
+        "callback": "on_set_local_time_pressed"
+    },
     "set-time-text": {
         "type": "entry",
         "default": "",
