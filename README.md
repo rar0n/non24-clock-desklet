@@ -1,20 +1,25 @@
 # Non-24 Clock
 
-A digital clock desklet for Cinnamon (Linux Mint) that runs on a day length of your choosing, made for people with a non-24-hour sleep-wake rhythm.
+A simple clock desklet for Cinnamon (Linux Mint) with adjustable day length for Non-24 people (Non-24-hour sleep-wake rhythm disorder, or so they call it. I call it normal).
+
+The app is entirely "vibe coded" with Claude 5.5 (medium effort).
+
 
 ## Features
 
 - Adjustable day length, down to fractions of a second. Enter decimal hours (`24.5`), `24:30` or `24:30.5`, or `24:39:35.244`
-- Day-length presets for the planets of the solar system, the Moon, Pluto and a placeholder Planet X (solar day, sunrise to sunrise; see [Planet day lengths](#planet-day-lengths)). The hour field grows with the day length, so Mercury reads `0000:00:00` to `4222:32:09`
+- For fun: Day-length presets for the planets of your local solar system, the Moon, Pluto and a mysterious Planet X (solar day, sunrise to sunrise; see [Planet day lengths](#planet-day-lengths)). The hour field grows with the day length, so Mercury reads `0000:00:00` to `4222:32:09`
 - Two display modes:
   - **Mars-style**: the day is always shown as 0-24, so the hours are stretched or compressed
-  - **Wrap-around**: normal-length hours that wrap at your day length, so the display can go above 24 (e.g. 24:17 on a 24 h 30 min day)
-- Changing the day length never makes the reading jump: wrap-around keeps the hours since Non-24 midnight (it only wraps, and advances the day number, if they no longer fit, and changing back restores the old reading), Mars-style keeps the fraction of the day
+  - **Wrap-around**: normal-length hours that wrap at your Non-24 day length. The display can go above 24 (e.g. 24:17 on a 24 h 30 min day)
 - Set the current Non-24 time by typing it in, or with one button set it to the current local time (wrap-around mode needs a day length longer than the local time); switching mode never moves Non-24 midnight
-- Optional day counter and a second line with the local Earth time
+- Note setting day length or selecting from planet list have a ~3 second delay (a Cinnamon Desklet feature, apparently).
+- Optional second line with the local Earth time, or a day counter.
 - DSEG7 / DSEG14 segment fonts (or any installed font), with unlit segments, colors, size and digit-shape options
 
 ## Planet day lengths
+
+- Mostly included for fun
 
 The presets are the mean *solar* day (noon to noon), not the rotation period. It is calculated as `1 / |1/rotation - 1/orbit|` from the sidereal rotation period and the sidereal orbital period; Venus and Uranus rotate retrograde, which makes their solar day shorter than their rotation. Earth is exactly 24 h and Mars is the official sol; the calculation reproduces the Mars sol to within half a millisecond.
 
@@ -30,9 +35,9 @@ The presets are the mean *solar* day (noon to noon), not the rotation period. It
 | Uranus | 17:14:22.55 | 17:14:24.0 retrograde (IAU rate -501.1600928 deg/day) |
 | Neptune | 15:57:59.32 | 15:57:58.68, IAU rate 541.1397757 deg/day (Karkoschka 2011) |
 | Pluto | 153:16:57.14 (6.3868 d) | 153:17:36.07 retrograde (IAU rate 56.3625225 deg/day); a dwarf planet, not a planet |
-| Planet X | 25:15:00 | placeholder, not a real body |
+| Planet X | 25:15:00 | placeholder, not a real body. Or is it? |
 
-Orbital periods are from JPL's Planetary Physical Parameters, converted at 365.25 days per year. The Moon is tidally locked, so its solar day is simply the mean synodic month (the interval between new moons, which varies by hours in practice). Planet X is a made-up 25.25 h placeholder. Mercury's result is good to about a minute because of the precision of its orbital period; the others are good to a second or so.
+Orbital periods are from JPL's Planetary Physical Parameters, converted at 365.25 days per year. The Moon is tidally locked, so its solar day is simply the mean synodic month (the interval between new moons, which varies by hours in practice). Mercury's result is good to about a minute because of the precision of its orbital period; the others are good to a second or so.
 
 The gas giants have no solid surface, so their "rotation" is defined by something else (the magnetic field or cloud features), and sources disagree:
 
@@ -51,6 +56,7 @@ Sources: [JPL Planetary Physical Parameters](https://ssd.jpl.nasa.gov/planets/ph
 3. Right-click the desktop, choose *Add Desklets*, and add **Non-24 Clock**.
 
 If the desklet does not show up right away, restart Cinnamon (Ctrl+Alt+Esc).
+(Or use Looking Glass for this (Alt+F2 - type "lg"), Restart Cinnamon. Or go to Extensions tab - Right-click Non-24 clock desklet -> Restart code)
 
 ## Fonts
 
