@@ -17,17 +17,17 @@
         "type": "combobox",
         "default": "custom",
         "description": "Day length preset",
-        "tooltip": "Use the length of a day (sunrise to sunrise) on a planet of the solar system, or Custom to use the day length typed below. Values are from NASA's Planetary Fact Sheet; Mars is the exact sol. The gas giants have no solid surface, so their figures depend on how rotation is measured; use Custom for other values.",
+        "tooltip": "Use the length of a day (sunrise to sunrise) on a planet of the solar system, or Custom to use the day length typed below. Calculated from IAU/JPL rotation and orbital periods; Mars is the official sol. The gas giants have no solid surface, so their figures depend on how rotation is measured (see the README); use Custom for other values.",
         "options": {
             "Custom (use the day length below)": "custom",
-            "Mercury (4222.6 h)": "mercury",
-            "Venus (2802 h)": "venus",
-            "Earth (24 h)": "earth",
+            "Mercury (4222:32:09.4)": "mercury",
+            "Venus (2802:00:40.9)": "venus",
+            "Earth (24:00:00)": "earth",
             "Mars (24:39:35.244)": "mars",
-            "Jupiter (9.9 h)": "jupiter",
-            "Saturn (10.7 h)": "saturn",
-            "Uranus (17.2 h)": "uranus",
-            "Neptune (16.1 h)": "neptune"
+            "Jupiter (9:55:33.12)": "jupiter",
+            "Saturn (10:39:23.98)": "saturn",
+            "Uranus (17:14:22.55)": "uranus",
+            "Neptune (15:57:59.32)": "neptune"
         }
     },
     "day-length": {

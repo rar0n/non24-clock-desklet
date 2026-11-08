@@ -29,17 +29,23 @@ const MIN_DAY_HOURS = 1;
 // and the clock text a sane length.
 const MAX_DAY_HOURS = 1e9;
 
-// Mean solar day of each planet in real hours (NASA Planetary Fact Sheet, "length of day";
-// the Mars value is the exact sol, 24:39:35.244). Keys match the "planet" setting.
-const PLANET_HOURS = {
-    "mercury": 4222.6,
-    "venus": 2802.0,
-    "earth": 24.0,
-    "mars": 88775.244 / 3600,
-    "jupiter": 9.9,
-    "saturn": 10.7,
-    "uranus": 17.2,
-    "neptune": 16.1
+// Mean solar day of each planet in real seconds (sunrise to sunrise), keys matching the
+// "planet" setting. Derived as 1 / |1/P_rot - 1/P_orb| from the sidereal rotation period
+// (IAU WGCCRE 2015 rotation rates; Jupiter System III) and the sidereal orbital period
+// (JPL, in Julian years of 365.25 d). Venus and Uranus rotate retrograde, which makes
+// their solar day shorter than the sidereal one. Mars is the official sol; the derivation
+// reproduces it to 0.5 ms. Mercury is good to about a minute (orbital period precision),
+// the others to the second or better, apart from the rotation ambiguities noted in the
+// README (Saturn, Neptune).
+const PLANET_DAY_SECONDS = {
+    "mercury": 15201129.4,   // 4222:32:09.4  (175.939 d)
+    "venus": 10087240.9,     // 2802:00:40.9  (116.750 d)
+    "earth": 86400,          // 24:00:00
+    "mars": 88775.244,       // 24:39:35.244
+    "jupiter": 35733.12,     // 9:55:33.12
+    "saturn": 38363.98,      // 10:39:23.98
+    "uranus": 62062.55,      // 17:14:22.55
+    "neptune": 57479.32      // 15:57:59.32
 };
 
 // settings-schema key -> property name on the desklet (read-only for us)
@@ -285,7 +291,10 @@ Non24Desklet.prototype = {
     // valid typed value; if the saved text is unreadable at startup, the length the anchor
     // was made under, else 24.
     _periodHours: function() {
-        return PLANET_HOURS[this.planet] || this._appliedPeriod || this.anchorPeriod || 24;
+        let planetSeconds = PLANET_DAY_SECONDS[this.planet];
+        if (planetSeconds)
+            return planetSeconds / 3600;
+        return this._appliedPeriod || this.anchorPeriod || 24;
     },
 
     // Called on every edit of the day-length field; applies the text once typing pauses.
