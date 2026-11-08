@@ -5,6 +5,7 @@ A digital clock desklet for Cinnamon (Linux Mint) that runs on a day length of y
 ## Features
 
 - Adjustable day length, down to fractions of a second. Enter decimal hours (`24.5`), `24:30` or `24:30.5`, or `24:39:35.244`
+- Day-length presets for the planets of the solar system (solar day: Mercury 4222.6 h, Venus 2802 h, Earth 24 h, Mars 24:39:35.244, Jupiter 9.9 h, Saturn 10.7 h, Uranus 17.2 h, Neptune 16.1 h; NASA Planetary Fact Sheet). The hour field grows with the day length, so Mercury reads `0000:00:00` to `4222:35:59`
 - Two display modes:
   - **Mars-style**: the day is always shown as 0-24, so the hours are stretched or compressed
   - **Wrap-around**: normal-length hours that wrap at your day length, so the display can go above 24 (e.g. 24:17 on a 24 h 30 min day)

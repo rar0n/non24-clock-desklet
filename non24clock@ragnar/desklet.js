@@ -25,11 +25,27 @@ const HOUR_MS = 3600000;
 // A typed day length is applied this long after the last keystroke.
 const LENGTH_APPLY_DELAY_MS = 1200;
 const MIN_DAY_HOURS = 1;
-const MAX_DAY_HOURS = 96;
+// Far beyond any real day; just keeps the arithmetic exact to the second (1e9 h = 3.6e12 s)
+// and the clock text a sane length.
+const MAX_DAY_HOURS = 1e9;
+
+// Mean solar day of each planet in real hours (NASA Planetary Fact Sheet, "length of day";
+// the Mars value is the exact sol, 24:39:35.244). Keys match the "planet" setting.
+const PLANET_HOURS = {
+    "mercury": 4222.6,
+    "venus": 2802.0,
+    "earth": 24.0,
+    "mars": 88775.244 / 3600,
+    "jupiter": 9.9,
+    "saturn": 10.7,
+    "uranus": 17.2,
+    "neptune": 16.1
+};
 
 // settings-schema key -> property name on the desklet (read-only for us)
 const SETTING_KEYS = {
     "mode": "mode",
+    "planet": "planet",
     "show-seconds": "showSeconds",
     "show-day": "showDay",
     "show-real": "showReal",
@@ -83,7 +99,7 @@ function utcLabel(d) {
 
 // "HH:MM" or "HH:MM:SS" -> seconds, or null if invalid
 function parseHMS(str) {
-    let m = /^\s*(\d{1,3}):(\d{1,2})(?::(\d{1,2}))?\s*$/.exec(str || "");
+    let m = /^\s*(\d+):(\d{1,2})(?::(\d{1,2}))?\s*$/.exec(str || "");
     if (!m)
         return null;
     let h = parseInt(m[1], 10);
@@ -130,14 +146,30 @@ function parseDayLength(str) {
 // was set to (24:29:59 reading 24:29:58); a microsecond of tolerance makes it round-trip.
 const EPS_SECONDS = 1e-6;
 
-function formatHms(hours) {
-    let total = Math.floor(hours * 3600 + EPS_SECONDS);
-    return pad(Math.floor(total / 3600)) + ":" + pad(Math.floor(total / 60) % 60) + ":" + pad(total % 60);
+// Zero-pad a whole number to at least `digits` digits.
+function padTo(n, digits) {
+    let s = String(n);
+    while (s.length < digits)
+        s = "0" + s;
+    return s;
 }
 
-function formatHm(hours) {
+// Digits the hour field needs (at least 2) for a display that wraps at `length` hours:
+// enough for the largest hour it can show, so the clock keeps a fixed width. A 26 h day
+// needs 2 (up to 25:59:59), a 4222.6 h day needs 4 (up to 4222:35:59).
+function hourDigitsFor(length) {
+    let maxSeconds = Math.max(0, Math.ceil(length * 3600 - EPS_SECONDS) - 1);
+    return Math.max(2, String(Math.floor(maxSeconds / 3600)).length);
+}
+
+function formatHms(hours, hourDigits) {
+    let total = Math.floor(hours * 3600 + EPS_SECONDS);
+    return padTo(Math.floor(total / 3600), hourDigits) + ":" + pad(Math.floor(total / 60) % 60) + ":" + pad(total % 60);
+}
+
+function formatHm(hours, hourDigits) {
     let total = Math.floor(hours * 60 + EPS_SECONDS / 60);
-    return pad(Math.floor(total / 60)) + ":" + pad(total % 60);
+    return padTo(Math.floor(total / 60), hourDigits) + ":" + pad(total % 60);
 }
 
 // ---- DSEG digit shapes -----------------------------------------------------------------
@@ -249,10 +281,11 @@ Non24Desklet.prototype = {
 
     // ---- clock model (mirrors ClockMath in the Android app) -------------------------
 
-    // Configured day length in real hours: the last valid typed value; if the saved text
-    // is unreadable at startup, the length the anchor was made under, else 24.
+    // Configured day length in real hours: the chosen planet's day, or for "Custom" the last
+    // valid typed value; if the saved text is unreadable at startup, the length the anchor
+    // was made under, else 24.
     _periodHours: function() {
-        return this._appliedPeriod || this.anchorPeriod || 24;
+        return PLANET_HOURS[this.planet] || this._appliedPeriod || this.anchorPeriod || 24;
     },
 
     // Called on every edit of the day-length field; applies the text once typing pauses.
@@ -265,7 +298,7 @@ Non24Desklet.prototype = {
             if (hours === null) {
                 Main.notify("Non-24 Clock", "Could not read that day length, keeping the previous one. " +
                     "Use hours (24.5), h:mm (24:30 or 24:30.5) or h:mm:ss (24:39:35.244), " +
-                    "between 1 and 96 hours.");
+                    "at least 1 hour.");
             } else {
                 this._appliedPeriod = hours;
                 this._refresh();
@@ -315,8 +348,9 @@ Non24Desklet.prototype = {
         let pos24 = wrap24(u);
         let shownLength = this.mode === "wrap" ? period : 24;
         let hours = pos24 / 24 * shownLength;
+        let digits = hourDigitsFor(shownLength);
         return {
-            text: this.showSeconds ? formatHms(hours) : formatHm(hours),
+            text: this.showSeconds ? formatHms(hours, digits) : formatHm(hours, digits),
             day: this.anchorDay + Math.floor(u / 24)
         };
     },
@@ -467,7 +501,7 @@ Non24Desklet.prototype = {
         this.anchorMs = now;
 
         // Wrap-around, HH:MM entered: HH:MM:00 becomes HH:MM:<real seconds> (shift 0..<60 s forward).
-        let hasSeconds = /^\s*\d{1,3}:\d{1,2}:\d{1,2}\s*$/.test(this.setTimeText);
+        let hasSeconds = /^\s*\d+:\d{1,2}:\d{1,2}\s*$/.test(this.setTimeText);
         if (this.mode === "wrap" && this.syncSeconds && !hasSeconds)
             this._alignSeconds(now, true);
         this._refresh();

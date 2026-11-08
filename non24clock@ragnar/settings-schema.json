@@ -13,11 +13,28 @@
             "Mars-style (stretched hours, 0-24)": "mars"
         }
     },
+    "planet": {
+        "type": "combobox",
+        "default": "custom",
+        "description": "Day length preset",
+        "tooltip": "Use the length of a day (sunrise to sunrise) on a planet of the solar system, or Custom to use the day length typed below. Values are from NASA's Planetary Fact Sheet; Mars is the exact sol. The gas giants have no solid surface, so their figures depend on how rotation is measured; use Custom for other values.",
+        "options": {
+            "Custom (use the day length below)": "custom",
+            "Mercury (4222.6 h)": "mercury",
+            "Venus (2802 h)": "venus",
+            "Earth (24 h)": "earth",
+            "Mars (24:39:35.244)": "mars",
+            "Jupiter (9.9 h)": "jupiter",
+            "Saturn (10.7 h)": "saturn",
+            "Uranus (17.2 h)": "uranus",
+            "Neptune (16.1 h)": "neptune"
+        }
+    },
     "day-length": {
         "type": "entry",
         "default": "26",
-        "description": "Day length (hours, h:mm or h:mm:ss)",
-        "tooltip": "Real time in one Non-24 day, between 1 and 96 hours. Decimal hours (24.5), hours:minutes (24:30, or 24:30.5 for fractional minutes), or hours:minutes:seconds (24:39:35.244 for fractional seconds). A comma works as the decimal separator. Applied when you stop typing; the clock keeps its current position in the day."
+        "description": "Custom day length (hours, h:mm or h:mm:ss)",
+        "tooltip": "Used when the preset above is Custom. Real time in one Non-24 day, at least 1 hour. Decimal hours (24.5), hours:minutes (24:30, or 24:30.5 for fractional minutes), or hours:minutes:seconds (24:39:35.244 for fractional seconds). A comma works as the decimal separator. Applied when you stop typing; the clock keeps its current position in the day."
     },
     "show-seconds": {
         "type": "switch",
