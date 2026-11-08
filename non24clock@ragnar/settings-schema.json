@@ -13,23 +13,11 @@
             "Mars-style (stretched hours, 0-24)": "mars"
         }
     },
-    "day-hours": {
-        "type": "spinbutton",
-        "default": 26,
-        "min": 1,
-        "max": 96,
-        "step": 1,
-        "units": "hours",
-        "description": "Day length: hours"
-    },
-    "day-minutes": {
-        "type": "spinbutton",
-        "default": 0,
-        "min": 0,
-        "max": 59,
-        "step": 1,
-        "units": "minutes",
-        "description": "Day length: minutes"
+    "day-length": {
+        "type": "entry",
+        "default": "26",
+        "description": "Day length (hours, h:mm or h:mm:ss)",
+        "tooltip": "Real time in one Non-24 day, between 1 and 96 hours. Decimal hours (24.5), hours:minutes (24:30, or 24:30.5 for fractional minutes), or hours:minutes:seconds (24:39:35.244 for fractional seconds). A comma works as the decimal separator. Applied when you stop typing; the clock keeps its current position in the day."
     },
     "show-seconds": {
         "type": "switch",

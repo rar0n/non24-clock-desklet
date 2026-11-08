@@ -22,12 +22,14 @@ const GLib = imports.gi.GLib;
 
 const TICK_MS = 250;
 const HOUR_MS = 3600000;
+// A typed day length is applied this long after the last keystroke.
+const LENGTH_APPLY_DELAY_MS = 1200;
+const MIN_DAY_HOURS = 1;
+const MAX_DAY_HOURS = 96;
 
 // settings-schema key -> property name on the desklet (read-only for us)
 const SETTING_KEYS = {
     "mode": "mode",
-    "day-hours": "dayHours",
-    "day-minutes": "dayMinutes",
     "show-seconds": "showSeconds",
     "show-day": "showDay",
     "show-real": "showReal",
@@ -90,6 +92,38 @@ function parseHMS(str) {
     if (min > 59 || s > 59)
         return null;
     return h * 3600 + min * 60 + s;
+}
+
+// Day length text -> real hours, or null if invalid. Accepted forms:
+//   24.5            decimal hours
+//   24:30           hours:minutes
+//   24:30.5         hours:minutes, fractional minutes
+//   24:39:35.244    hours:minutes:seconds, fractional seconds
+// Only the last field may have a fraction; minutes and seconds must be below 60.
+// A comma is accepted as the decimal separator. Result must be 1..96 hours.
+function parseDayLength(str) {
+    let s = String(str === undefined || str === null ? "" : str).trim().replace(/,/g, ".");
+    if (!s)
+        return null;
+    let parts = s.split(":");
+    if (parts.length > 3)
+        return null;
+    let num = /^(\d+(\.\d*)?|\.\d+)$/;
+    for (let i = 0; i < parts.length; i++) {
+        if (!num.test(parts[i]))
+            return null;
+        if (i < parts.length - 1 && parts[i].indexOf(".") >= 0)
+            return null;
+    }
+    let v = parts.map(Number);
+    if (v.length >= 2 && v[1] >= 60)
+        return null;
+    if (v.length === 3 && v[2] >= 60)
+        return null;
+    let hours = v[0] + (v[1] || 0) / 60 + (v[2] || 0) / 3600;
+    if (!(hours >= MIN_DAY_HOURS && hours <= MAX_DAY_HOURS))
+        return null;
+    return hours;
 }
 
 // A time set via 0..24 scaling and shown back can land a few 1e-11 s below the second it
@@ -183,6 +217,7 @@ Non24Desklet.prototype = {
         Desklet.Desklet.prototype._init.call(this, metadata, desklet_id);
 
         this._timeoutId = 0;
+        this._lengthTimeoutId = 0;
         // Cinnamon invokes the settings button's callback by name; make sure `this` is right.
         this.on_set_time_pressed = this.on_set_time_pressed.bind(this);
         this.on_align_seconds_pressed = this.on_align_seconds_pressed.bind(this);
@@ -197,6 +232,10 @@ Non24Desklet.prototype = {
             this.settings.bindProperty(Settings.BindingDirection.BIDIRECTIONAL,
                 key, ANCHOR_KEYS[key], null, null);
         }
+        // The day length is applied after a pause in typing, not on every keystroke.
+        this.settings.bindProperty(Settings.BindingDirection.IN,
+            "day-length", "dayLength", () => this._scheduleLengthApply(), null);
+        this._appliedPeriod = parseDayLength(this.dayLength);
         this._initAnchor();
 
         this._buildUi();
@@ -210,13 +249,29 @@ Non24Desklet.prototype = {
 
     // ---- clock model (mirrors ClockMath in the Android app) -------------------------
 
-    // Configured day length in real hours.
+    // Configured day length in real hours: the last valid typed value; if the saved text
+    // is unreadable at startup, the length the anchor was made under, else 24.
     _periodHours: function() {
-        let minutes = (Math.floor(Number(this.dayHours)) || 0) * 60 +
-            (Math.floor(Number(this.dayMinutes)) || 0);
-        if (minutes < 60)
-            minutes = 24 * 60;
-        return minutes / 60;
+        return this._appliedPeriod || this.anchorPeriod || 24;
+    },
+
+    // Called on every edit of the day-length field; applies the text once typing pauses.
+    _scheduleLengthApply: function() {
+        if (this._lengthTimeoutId)
+            Mainloop.source_remove(this._lengthTimeoutId);
+        this._lengthTimeoutId = Mainloop.timeout_add(LENGTH_APPLY_DELAY_MS, () => {
+            this._lengthTimeoutId = 0;
+            let hours = parseDayLength(this.dayLength);
+            if (hours === null) {
+                Main.notify("Non-24 Clock", "Could not read that day length, keeping the previous one. " +
+                    "Use hours (24.5), h:mm (24:30 or 24:30.5) or h:mm:ss (24:39:35.244), " +
+                    "between 1 and 96 hours.");
+            } else {
+                this._appliedPeriod = hours;
+                this._refresh();
+            }
+            return false;
+        });
     },
 
     _initAnchor: function() {
@@ -460,6 +515,10 @@ Non24Desklet.prototype = {
         if (this._timeoutId) {
             Mainloop.source_remove(this._timeoutId);
             this._timeoutId = 0;
+        }
+        if (this._lengthTimeoutId) {
+            Mainloop.source_remove(this._lengthTimeoutId);
+            this._lengthTimeoutId = 0;
         }
         if (this.settings)
             this.settings.finalize();

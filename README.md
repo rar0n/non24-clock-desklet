@@ -4,7 +4,7 @@ A digital clock desklet for Cinnamon (Linux Mint) that runs on a day length of y
 
 ## Features
 
-- Adjustable day length (hours and minutes, e.g. 26 h 00 min)
+- Adjustable day length, down to fractions of a second. Enter decimal hours (`24.5`), `24:30` or `24:30.5`, or `24:39:35.244`
 - Two display modes:
   - **Mars-style**: the day is always shown as 0-24, so the hours are stretched or compressed
   - **Wrap-around**: normal-length hours that wrap at your day length, so the display can go above 24 (e.g. 24:17 on a 24 h 30 min day)
