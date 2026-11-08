@@ -1,0 +1,184 @@
+{
+    "head-clock": {
+        "type": "header",
+        "description": "Clock"
+    },
+    "mode": {
+        "type": "combobox",
+        "default": "wrap",
+        "description": "Display mode",
+        "tooltip": "Non-24 wrap-around uses normal-length hours and wraps at the Non-24 day length (so it may show values above 24). Mars-style stretches/compresses the hours so the day always reads 0-24.",
+        "options": {
+            "Non-24 wrap-around (normal hours, wraps at Non-24 day length)": "wrap",
+            "Mars-style (stretched hours, 0-24)": "mars"
+        }
+    },
+    "day-hours": {
+        "type": "spinbutton",
+        "default": 26,
+        "min": 1,
+        "max": 96,
+        "step": 1,
+        "units": "hours",
+        "description": "Day length: hours"
+    },
+    "day-minutes": {
+        "type": "spinbutton",
+        "default": 0,
+        "min": 0,
+        "max": 59,
+        "step": 1,
+        "units": "minutes",
+        "description": "Day length: minutes"
+    },
+    "show-seconds": {
+        "type": "switch",
+        "default": true,
+        "description": "Show seconds"
+    },
+    "show-day": {
+        "type": "switch",
+        "default": true,
+        "description": "Show day number"
+    },
+    "show-real": {
+        "type": "switch",
+        "default": false,
+        "description": "Show Earth time (local clock with UTC offset)"
+    },
+
+    "head-set": {
+        "type": "header",
+        "description": "Set the current Non-24 time"
+    },
+    "set-time-text": {
+        "type": "entry",
+        "default": "",
+        "description": "Time to set (HH:MM or HH:MM:SS)",
+        "tooltip": "Entered in the units of the current display mode: 0-24 in Mars-style, normal hours up to the day length in wrap-around."
+    },
+    "set-time-button": {
+        "type": "button",
+        "description": "Set clock to this time now",
+        "callback": "on_set_time_pressed"
+    },
+    "sync-seconds": {
+        "type": "switch",
+        "default": true,
+        "description": "Wrap-around: sync seconds with the Earth clock when setting HH:MM",
+        "tooltip": "Setting HH:MM then gives HH:MM:SS where SS is the Earth clock's seconds. Typing HH:MM:SS sets exactly that. Stays in sync across Non-24 midnight only if the day length is a whole number of minutes."
+    },
+    "align-button": {
+        "type": "button",
+        "description": "Wrap-around: align seconds with the Earth clock now (at most 30 s change)",
+        "callback": "on_align_seconds_pressed"
+    },
+
+    "head-look": {
+        "type": "header",
+        "description": "Appearance"
+    },
+    "font-family": {
+        "type": "combobox",
+        "default": "DSEG7 Classic",
+        "description": "Font",
+        "tooltip": "DSEG fonts need to be installed (sudo apt install fonts-dseg).",
+        "options": {
+            "DSEG7 Classic": "DSEG7 Classic",
+            "DSEG7 Modern": "DSEG7 Modern",
+            "DSEG14 Classic": "DSEG14 Classic",
+            "DSEG14 Modern": "DSEG14 Modern",
+            "Monospace": "Monospace",
+            "Sans": "Sans",
+            "Serif": "Serif"
+        }
+    },
+    "custom-font": {
+        "type": "entry",
+        "default": "",
+        "description": "Custom font family (overrides the choice above)",
+        "tooltip": "Any installed font family name, e.g. DSEG14 Modern. Leave empty to use the list."
+    },
+    "show-unlit": {
+        "type": "switch",
+        "default": true,
+        "description": "Show unlit segments (DSEG fonts)",
+        "tooltip": "Draws the segments that are off as a faint ghost behind the digits."
+    },
+    "font-size": {
+        "type": "spinbutton",
+        "default": 56,
+        "min": 12,
+        "max": 300,
+        "step": 2,
+        "units": "px",
+        "description": "Font size"
+    },
+    "text-color": {
+        "type": "colorchooser",
+        "default": "rgba(120, 255, 160, 1)",
+        "description": "Text color"
+    },
+    "earth-color": {
+        "type": "colorchooser",
+        "default": "rgba(140, 180, 255, 1)",
+        "description": "Earth time text color"
+    },
+    "background-color": {
+        "type": "colorchooser",
+        "default": "rgba(0, 0, 0, 0.6)",
+        "description": "Background color"
+    },
+    "corner-radius": {
+        "type": "spinbutton",
+        "default": 12,
+        "min": 0,
+        "max": 60,
+        "step": 1,
+        "units": "px",
+        "description": "Corner radius"
+    },
+
+    "head-shapes": {
+        "type": "header",
+        "description": "Digit shapes (DSEG fonts)"
+    },
+    "shape-zero-slashed": {
+        "type": "switch",
+        "default": true,
+        "description": "0 - slashed 0 (DSEG14 only)",
+        "tooltip": "Off draws a plain 0 without the diagonal. The digit shapes need DSEG v0.50 or newer (the Braille segment glyphs); older fonts show standard digits."
+    },
+    "shape-six-tailless": {
+        "type": "switch",
+        "default": false,
+        "description": "6 - Tail-less (no top segment)"
+    },
+    "shape-seven-three": {
+        "type": "switch",
+        "default": true,
+        "description": "7 - Tail-less (only segments a,b,c)"
+    },
+    "shape-nine-tailless": {
+        "type": "switch",
+        "default": false,
+        "description": "9 - Tail-less (no bottom segment)"
+    },
+
+    "anchor-ms": {
+        "type": "generic",
+        "default": 0
+    },
+    "anchor-pos24": {
+        "type": "generic",
+        "default": 0
+    },
+    "anchor-period": {
+        "type": "generic",
+        "default": 0
+    },
+    "anchor-day": {
+        "type": "generic",
+        "default": 1
+    }
+}
