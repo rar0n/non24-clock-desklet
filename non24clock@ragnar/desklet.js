@@ -176,12 +176,12 @@ function padTo(n, digits) {
     return s;
 }
 
-// Digits the hour field needs (at least 2) for a display that wraps at `length` hours:
-// enough for the largest hour it can show, so the clock keeps a fixed width. A 26 h day
-// needs 2 (up to 25:59:59), a 4222.6 h day needs 4 (up to 4222:35:59).
+// Digits the hour field needs for a display that wraps at `length` hours: exactly enough
+// for the largest hour it can show, so the clock keeps a fixed width. A 9.9 h day needs 1
+// (up to 9:53:59), a 26 h day 2 (up to 25:59:59), a 4222.6 h day 4 (up to 4222:35:59).
 function hourDigitsFor(length) {
     let maxSeconds = Math.max(0, Math.ceil(length * 3600 - EPS_SECONDS) - 1);
-    return Math.max(2, String(Math.floor(maxSeconds / 3600)).length);
+    return String(Math.floor(maxSeconds / 3600)).length;
 }
 
 function formatHms(hours, hourDigits) {
@@ -548,14 +548,21 @@ Non24Desklet.prototype = {
         let now = Date.now();
         let r = this._compute(now);
 
+        // Besides set_text, ask for a relayout and repaint: after the text changed, the
+        // leftmost digit has been seen staying stale until the pointer hovered the desklet.
         let clockText = this._shapeText(r.text);
-        if (this._timeLabel.get_text() !== clockText)
+        if (this._timeLabel.get_text() !== clockText) {
             this._timeLabel.set_text(clockText);
+            this._timeLabel.queue_redraw();
+        }
 
         // all segments on: '8' in DSEG7, '~' in DSEG14 (colon unchanged)
         let ghostText = r.text.replace(/\d/g, this._seg14 ? "~" : "8");
-        if (this._ghostLabel.get_text() !== ghostText)
+        if (this._ghostLabel.get_text() !== ghostText) {
             this._ghostLabel.set_text(ghostText);
+            this._ghostLabel.queue_redraw();
+            this._clockStack.queue_relayout();
+        }
 
         let dayText = this.showDay ? "Day " + r.day : "";
         if (this._dayLabel.get_text() !== dayText)
