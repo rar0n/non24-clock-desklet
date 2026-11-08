@@ -24,6 +24,9 @@ const TICK_MS = 250;
 const HOUR_MS = 3600000;
 // A typed day length is applied this long after the last keystroke.
 const LENGTH_APPLY_DELAY_MS = 1200;
+// Writes that must show up in an open settings window wait this long (it ignores file
+// changes for ~2 s after its own saves).
+const SETTINGS_SYNC_DELAY_MS = 2600;
 const MIN_DAY_HOURS = 1;
 // Far beyond any real day; just keeps the arithmetic exact to the second (1e9 h = 3.6e12 s)
 // and the clock text a sane length.
@@ -269,6 +272,8 @@ Non24Desklet.prototype = {
 
         this._timeoutId = 0;
         this._lengthTimeoutId = 0;
+        this._syncTimeoutId = 0;
+        this._pendingSync = null;
         // Cinnamon invokes the settings button's callback by name; make sure `this` is right.
         this.on_set_time_pressed = this.on_set_time_pressed.bind(this);
         this.on_align_seconds_pressed = this.on_align_seconds_pressed.bind(this);
@@ -293,7 +298,7 @@ Non24Desklet.prototype = {
         this._appliedPeriod = parseDayLength(this.dayLength);
         // Settings saved with a planet chosen: make the field match it.
         if (PLANET_DAY_SECONDS[this.planet])
-            this._applyPlanet();
+            this._applyPlanet(true);
         this._initAnchor();
 
         this._buildUi();
@@ -313,8 +318,9 @@ Non24Desklet.prototype = {
         return this._appliedPeriod || this.anchorPeriod || 24;
     },
 
-    // A planet is chosen: write its day length into the field and use it right away.
-    _applyPlanet: function() {
+    // A planet is chosen: use its day length right away, and write it into the field.
+    // immediate: write the field now (startup); otherwise after a delay, see _scheduleSync.
+    _applyPlanet: function(immediate) {
         let seconds = PLANET_DAY_SECONDS[this.planet];
         if (!seconds)
             return;
@@ -322,23 +328,63 @@ Non24Desklet.prototype = {
             Mainloop.source_remove(this._lengthTimeoutId);
             this._lengthTimeoutId = 0;
         }
-        this.dayLength = secondsToDayLengthText(seconds);
         this._appliedPeriod = seconds / 3600;
+        if (immediate) {
+            this._cancelSync();
+            this.dayLength = secondsToDayLengthText(seconds);
+        } else {
+            this._scheduleSync("field");
+        }
+    },
+
+    // The settings window ignores changes to the settings file for about 2 s after it saved
+    // one itself. A value we write inside that window is stored but the open window never
+    // shows it (it appears only after closing and reopening it). So the two cross-updates,
+    // planet chosen -> fill the field, field edited -> planet back to "custom", are written
+    // after SETTINGS_SYNC_DELAY_MS, once the window is listening again. The clock itself
+    // does not wait: _appliedPeriod is updated at once.
+    _scheduleSync: function(kind) {
+        this._cancelSync();
+        this._pendingSync = kind;
+        this._syncTimeoutId = Mainloop.timeout_add(SETTINGS_SYNC_DELAY_MS, () => {
+            this._syncTimeoutId = 0;
+            let pending = this._pendingSync;
+            this._pendingSync = null;
+            let seconds = PLANET_DAY_SECONDS[this.planet];
+            if (pending === "field" && seconds)
+                this.dayLength = secondsToDayLengthText(seconds);
+            else if (pending === "planet")
+                this.planet = "custom";
+            return false;
+        });
+    },
+
+    _cancelSync: function() {
+        if (this._syncTimeoutId) {
+            Mainloop.source_remove(this._syncTimeoutId);
+            this._syncTimeoutId = 0;
+        }
+        this._pendingSync = null;
     },
 
     _onPlanetChanged: function() {
-        this._applyPlanet();
+        if (PLANET_DAY_SECONDS[this.planet])
+            this._applyPlanet(false);
+        else
+            this._cancelSync(); // "custom": nothing to fill in
         this._restyleAndRefresh(true);
     },
 
-    // The day-length field changed: by the user, or by _applyPlanet() writing a planet's value.
+    // The day-length field changed: by the user, or by our own delayed write of a planet's value.
     _onDayLengthChanged: function() {
         let seconds = PLANET_DAY_SECONDS[this.planet];
         if (seconds) {
             let typed = parseDayLength(this.dayLength);
-            if (typed !== null && Math.abs(typed - seconds / 3600) < 1e-9)
-                return; // that is the planet's own value, nothing was edited
-            this.planet = "custom"; // edited by hand: no planet matches any more
+            if (typed !== null && Math.abs(typed - seconds / 3600) < 1e-9) {
+                this._cancelSync(); // that is the planet's own value, nothing was edited
+                return;
+            }
+            this._scheduleSync("planet"); // edited by hand: no planet matches any more
         }
         this._scheduleLengthApply();
     },
@@ -609,6 +655,7 @@ Non24Desklet.prototype = {
             Mainloop.source_remove(this._lengthTimeoutId);
             this._lengthTimeoutId = 0;
         }
+        this._cancelSync();
         if (this.settings)
             this.settings.finalize();
     }
