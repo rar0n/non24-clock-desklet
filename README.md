@@ -5,7 +5,7 @@ A digital clock desklet for Cinnamon (Linux Mint) that runs on a day length of y
 ## Features
 
 - Adjustable day length, down to fractions of a second. Enter decimal hours (`24.5`), `24:30` or `24:30.5`, or `24:39:35.244`
-- Day-length presets for the planets of the solar system (solar day, sunrise to sunrise; see [Planet day lengths](#planet-day-lengths)). The hour field grows with the day length, so Mercury reads `0000:00:00` to `4222:32:09`
+- Day-length presets for the planets of the solar system, the Moon, Pluto and a placeholder Planet X (solar day, sunrise to sunrise; see [Planet day lengths](#planet-day-lengths)). The hour field grows with the day length, so Mercury reads `0000:00:00` to `4222:32:09`
 - Two display modes:
   - **Mars-style**: the day is always shown as 0-24, so the hours are stretched or compressed
   - **Wrap-around**: normal-length hours that wrap at your day length, so the display can go above 24 (e.g. 24:17 on a 24 h 30 min day)
@@ -23,13 +23,16 @@ The presets are the mean *solar* day (noon to noon), not the rotation period. It
 | Mercury | 4222:32:09.4 (175.939 d) | 58.646225 d (IAU rate 6.1385025 deg/day) |
 | Venus | 2802:00:40.9 (116.750 d) | 243.018484 d retrograde (IAU rate -1.4813688 deg/day) |
 | Earth | 24:00:00 | by definition |
+| Moon | 708:44:02.88 (29.530588853 d) | synchronous: sidereal 27.321661 d; the solar day is the synodic month (new moon to new moon) |
 | Mars | 24:39:35.244 | 24:37:22.664 (IAU rate 350.89198226 deg/day) |
 | Jupiter | 9:55:33.12 | 9:55:29.711, System III (1965) |
 | Saturn | 10:39:23.98 | 10:39:22.4, IAU rate 810.7939024 deg/day (Voyager radio) |
 | Uranus | 17:14:22.55 | 17:14:24.0 retrograde (IAU rate -501.1600928 deg/day) |
 | Neptune | 15:57:59.32 | 15:57:58.68, IAU rate 541.1397757 deg/day (Karkoschka 2011) |
+| Pluto | 153:16:57.14 (6.3868 d) | 153:17:36.07 retrograde (IAU rate 56.3625225 deg/day); a dwarf planet, not a planet |
+| Planet X | 25:15:00 | placeholder, not a real body |
 
-Orbital periods are from JPL's Planetary Physical Parameters, converted at 365.25 days per year. Mercury's result is good to about a minute because of the precision of its orbital period; the others are good to a second or so.
+Orbital periods are from JPL's Planetary Physical Parameters, converted at 365.25 days per year. The Moon is tidally locked, so its solar day is simply the mean synodic month (the interval between new moons, which varies by hours in practice). Planet X is a made-up 25.25 h placeholder. Mercury's result is good to about a minute because of the precision of its orbital period; the others are good to a second or so.
 
 The gas giants have no solid surface, so their "rotation" is defined by something else (the magnetic field or cloud features), and sources disagree:
 

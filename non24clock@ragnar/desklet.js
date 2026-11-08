@@ -41,16 +41,20 @@ const MAX_DAY_HOURS = 1e9;
 // their solar day shorter than the sidereal one. Mars is the official sol; the derivation
 // reproduces it to 0.5 ms. Mercury is good to about a minute (orbital period precision),
 // the others to the second or better, apart from the rotation ambiguities noted in the
-// README (Saturn, Neptune).
+// README (Saturn, Neptune). The Moon's day is its synodic month (new moon to new moon),
+// Pluto uses the IAU rotation rate, and "planetx" is a made-up 25.25 h placeholder.
 const PLANET_DAY_SECONDS = {
     "mercury": 15201129.4,   // 4222:32:09.4  (175.939 d)
     "venus": 10087240.9,     // 2802:00:40.9  (116.750 d)
     "earth": 86400,          // 24:00:00
+    "moon": 2551442.88,      // 708:44:02.88  (mean synodic month, 29.530588853 d)
     "mars": 88775.244,       // 24:39:35.244
     "jupiter": 35733.12,     // 9:55:33.12
     "saturn": 38363.98,      // 10:39:23.98
     "uranus": 62062.55,      // 17:14:22.55
-    "neptune": 57479.32      // 15:57:59.32
+    "neptune": 57479.32,     // 15:57:59.32
+    "pluto": 551817.14,      // 153:16:57.14  (dwarf planet; 6.3868 d, retrograde)
+    "planetx": 90900         // 25:15:00      (placeholder)
 };
 
 // settings-schema key -> property name on the desklet (read-only for us)

@@ -2,7 +2,7 @@
     "uuid": "non24clock@ragnar",
     "name": "Non-24 Clock",
     "description": "A digital clock for a non-24-hour day. Mars-style (stretched hours, shown 0-24) or wrap-around (normal hours, wraps at your day length).",
-    "version": "2026.11.08.6",
+    "version": "2026.11.08.7",
     "max-instances": "5",
     "prevent-decorations": true
 }
