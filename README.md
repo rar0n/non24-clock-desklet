@@ -1,5 +1,7 @@
 # Non-24 Clock
 
+<img width="236" height="112" alt="Non-24-clock-07" src="https://github.com/user-attachments/assets/441ddf40-ef2a-4f18-979f-fe045650596b" />
+
 A simple clock desklet for Cinnamon (Linux Mint) with adjustable day length for Non-24 people (Non-24-hour sleep-wake rhythm disorder, or so they call it. I call it normal).
 
 The app is entirely "vibe coded" with Claude 5.5 (medium effort).
